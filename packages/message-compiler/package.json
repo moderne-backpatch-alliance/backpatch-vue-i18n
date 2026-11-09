@@ -1,6 +1,6 @@
 {
   "name": "@intlify/message-compiler",
-  "version": "11.3.2",
+  "version": "11.3.3-backpatch-00001",
   "description": "@intlify/message-compiler",
   "keywords": [
     "compiler",
