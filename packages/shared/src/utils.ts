@@ -124,6 +124,11 @@ function escapeAttributeValue(value: string): string {
     .replace(/>/g, '&gt;')
 }
 
+// `srcdoc` holds a whole HTML document: its value is entity-decoded and then parsed again,
+// so neither escaping the value nor neutralizing `on*` inside it makes it inert
+const srcdocPattern = /(?:^|[\s"'<>/])srcdoc\s*=/i
+const srcdocAttributePattern = /(^|[\s"'<>/])s(rcdoc\s*=)/gi
+
 export function sanitizeTranslatedHtml(html: string): string {
   // Escape dangerous characters in attribute values
   // Process attributes with double quotes
@@ -151,6 +156,18 @@ export function sanitizeTranslatedHtml(html: string): string {
     }
     // Neutralize event handler attributes by escaping 'on'
     html = html.replace(/(\s+)(on)(\w+\s*=)/gi, '$1&#111;n$3')
+  }
+
+  // Detect and neutralize `srcdoc` attributes
+  if (srcdocPattern.test(html)) {
+    if (__DEV__) {
+      warn(
+        'Potentially dangerous srcdoc attribute detected in translation. ' +
+          'Consider removing srcdoc from your translation messages.'
+      )
+    }
+    // Neutralize `srcdoc` by escaping 's': character references are not decoded in attribute names
+    html = html.replace(srcdocAttributePattern, '$1&#115;$2')
   }
 
   // Disable javascript: URLs in various contexts
