@@ -1,0 +1,26 @@
+schema: osera-patch-evidence/0.1.0
+producer: moderne
+release: 11.3.3-backpatch-00001
+baseline: v11.3.2+backpatch.baseline
+fixes:
+  - cve: CVE-2026-118257
+    upstream_fix_url: https://github.com/intlify/vue-i18n/commit/43391d20e7c85403cb59bdb21b5d542819f54042
+    advisory_url: https://nvd.nist.gov/vuln/detail/CVE-2026-118257
+    patch_commit_url: https://github.com/moderne-backpatch-alliance/backpatch-vue-i18n/commit/86b6587
+    basis: backport
+    artifacts:
+      - vue-i18n
+      - petite-vue-i18n
+      - "@intlify/core"
+      - "@intlify/vue-i18n-core"
+      - "@intlify/core-base"
+      - "@intlify/shared"
+    note: "New in this release; upstream's fix in 11.4.14, placed by hand in packages/shared/src/utils.ts, where 11.3.2's sanitizer lives before upstream moved it to sanitize.ts. Its two patterns and its srcdoc block are upstream's verbatim, after the event handler block as upstream has it, and its tests replace the baseline's srcdoc test. sanitizeTranslatedHtml now writes a srcdoc attribute's name as &#115;rcdoc, so the element keeps no srcdoc attribute, whatever its case, quoting or boundary. @intlify/shared carries the change; @intlify/core-base, @intlify/core, @intlify/vue-i18n-core, vue-i18n and petite-vue-i18n inline it in their browser bundles and are rebuilt; @intlify/message-compiler and @intlify/devtools-types hold none of it and ship as upstream's files. Bypasses of the same sanitizer that upstream closed later stay open here: javascript: URLs, which 11.3.2 writes as javascript&#58; and an HTML parser decodes back (upstream's 4941b9a0, 11.4.4), and the vectors of GHSA-473g-cvf6-mfxj and GHSA-jrxq-gc2q-9357; their upstream tests fail on this release's code."
+tests:
+  commit: 86b658700bb1995117978d4284e0801655eabc07
+  command: pnpm@9.0.4 install --frozen-lockfile --ignore-scripts at the tag, then at the tested commit pnpm build:type and TZ=UTC vitest run -c vitest.unit.config.ts --typecheck with vitest's junit reporter; the shipped files ran upstream's srcdoc tests under node --test with its junit reporter; hostname attributes removed from the reports
+  runtime: Node.js v22.16.0, pnpm 9.0.4, macOS 27.2 arm64
+  report: shared-11.3.3-backpatch-00001-tests.zip
+  report_sha256: 742d2a8a8ce52fb9196285681d8da98905fef711aaf2d6cf359cae9a9071bf41
+  result: pass
+  note: "Upstream's unit suite at the tested commit: 905 tests, 870 passed, 2 skipped and 33 todo, as 11.3.2 skips and marks them, with upstream's 12 srcdoc tests in place of the baseline's one. On the code below the fix 10 of the 12 fail; the 2 that keep srcdoc in text and in longer attribute names pass either way. The same srcdoc tests ran on the packaged files of the six rebuilt members, through each entry point, with NODE_ENV development and production: 84 entries, 174 passed, 0 failed; on npmjs's 11.3.2 files 156 fail, all but the 2 that pass either way. @intlify/vue-i18n-core's 4 self-contained browser bundles export no way to register a message resolver, so no public call reaches their sanitizer, and they are skipped. Built with pnpm 9.0.4 at the tag, every file of the eight members' 11.3.2 tarballs matches npmjs's byte for byte except the order of dependencies in 4 package.json files; each released package.json is npmjs's with version and member references moved. Upstream's e2e suite on the installed Chrome: 147 passed, and the same 2 datetime-format rendering tests fail on 11.3.2 and on this release. The archive's file-origins.yaml maps each packaged file of the six rebuilt members to the commit, or names its inputs and build."
